@@ -9,6 +9,7 @@ import {
 } from "framer-motion";
 import { ArrowRight, Mail, ExternalLink, ArrowDown, Star } from "lucide-react";
 import Lenis from "lenis";
+import emailjs from "emailjs-com";
 
 const PROJECTS = [
   {
@@ -166,6 +167,25 @@ export default function Portfolio() {
   const handleCardMouseLeave = () => {
     setCardRotateX(0);
     setCardRotateY(0);
+  };
+
+  const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      await emailjs.sendForm(
+        "service_gnkex1d",
+        "template_qxm2l0i",
+        e.currentTarget,
+        "ed4-Fw6I8sgq-jd8I"
+      );
+
+      alert("Message sent!");
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error("EmailJS error:", error);
+      alert("Failed to send message. Please try again.");
+    }
   };
 
   const cursorX = useSpring(mousePosition.x, { stiffness: 400, damping: 25 });
@@ -578,30 +598,38 @@ export default function Portfolio() {
                   </div>
                 </div>
                 
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-4" onSubmit={sendEmail}>
                   <div className="grid grid-cols-2 gap-4">
                     <input 
-                      type="text" 
-                      placeholder="Name" 
+                      type="text"
+                      name="name"
+                      placeholder="Name"
+                      required
                       className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full placeholder:text-gray-600 shadow-inner"
                     />
                     <input 
-                      type="email" 
-                      placeholder="Email" 
+                      type="email"
+                      name="email"
+                      placeholder="Email"
+                      required
                       className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full placeholder:text-gray-600 shadow-inner"
                     />
                   </div>
                   <input 
-                    type="text" 
-                    placeholder="Subject" 
+                    type="text"
+                    name="subject"
+                    placeholder="Subject"
                     className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full placeholder:text-gray-600 shadow-inner"
                   />
                   <textarea 
-                    placeholder="Message" 
+                    name="message"
+                    placeholder="Message"
+                    required
                     rows={4}
                     className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full resize-none placeholder:text-gray-600 shadow-inner"
                   />
                   <button 
+                    type="submit"
                     className="w-full bg-white text-black font-medium py-4 rounded-xl hover:bg-purple-100 hover:shadow-[0_0_20px_rgba(147,51,234,0.3)] transition-all hover-target group relative overflow-hidden"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
