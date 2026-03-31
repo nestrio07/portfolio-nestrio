@@ -1,15 +1,43 @@
+
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  AnimatePresence,
   motion,
   useScroll,
-  useTransform,
   useSpring,
+  useTransform,
 } from "framer-motion";
-import { ArrowRight, Mail, ExternalLink, ArrowDown, Star } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ExternalLink,
+  Loader2,
+  Mail,
+  Star,
+} from "lucide-react";
 import Lenis from "lenis";
 import emailjs from "emailjs-com";
+
+type ContactFormData = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  website: string;
+};
+
+type ContactFormErrors = Partial<Record<"name" | "email" | "message", string>>;
+
+const initialFormData: ContactFormData = {
+  name: "",
+  email: "",
+  subject: "",
+  message: "",
+  website: "",
+};
 
 const PROJECTS = [
   {
@@ -65,6 +93,7 @@ const REVIEWS = [
 
 export default function Portfolio() {
   const lenisRef = useRef<Lenis | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
@@ -73,6 +102,12 @@ export default function Portfolio() {
   // 3D Card Interactive States
   const [cardRotateX, setCardRotateX] = useState(0);
   const [cardRotateY, setCardRotateY] = useState(0);
+  const [formData, setFormData] = useState<ContactFormData>(initialFormData);
+  const [formErrors, setFormErrors] = useState<ContactFormErrors>({});
+  const [submitState, setSubmitState] = useState<
+    "idle" | "sending" | "success" | "error"
+  >("idle");
+  const [submitMessage, setSubmitMessage] = useState("");
 
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -169,24 +204,113 @@ export default function Portfolio() {
     setCardRotateY(0);
   };
 
+  const validateContactForm = (): ContactFormErrors => {
+    const errors: ContactFormErrors = {};
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.name.trim()) {
+      errors.name = "Please enter your name.";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Please enter your email address.";
+    } else if (!emailPattern.test(formData.email.trim())) {
+      errors.email = "Please enter a valid email address.";
+    }
+
+    if (!formData.message.trim()) {
+      errors.message = "Please add a short message.";
+    }
+
+    return errors;
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+
+    setFormData((currentData) => ({
+      ...currentData,
+      [name]: value,
+    }));
+
+    if (name === "name" || name === "email" || name === "message") {
+      setFormErrors((currentErrors) => {
+        if (!currentErrors[name]) {
+          return currentErrors;
+        }
+
+        const nextErrors = { ...currentErrors };
+        delete nextErrors[name];
+        return nextErrors;
+      });
+    }
+
+    if (submitState !== "idle") {
+      setSubmitState("idle");
+      setSubmitMessage("");
+    }
+  };
+
   const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (submitState === "sending") {
+      return;
+    }
+
+    const validationErrors = validateContactForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFormErrors(validationErrors);
+      setSubmitState("error");
+      setSubmitMessage("Please fix the highlighted fields and try again.");
+      return;
+    }
+
+    if (formData.website.trim()) {
+      setSubmitState("success");
+      setSubmitMessage("Message sent successfully!");
+      setFormData(initialFormData);
+      setFormErrors({});
+      return;
+    }
+
+    setSubmitState("sending");
+    setSubmitMessage("");
+
     try {
+      if (!formRef.current) {
+        throw new Error("Contact form is unavailable.");
+      }
+
       await emailjs.sendForm(
         "service_gnkex1d",
         "template_qxm2l0i",
-        e.currentTarget,
+        formRef.current,
         "ed4-Fw6I8sgq-jd8I"
       );
 
-      alert("Message sent!");
-      e.currentTarget.reset();
+      setSubmitState("success");
+      setSubmitMessage("Message sent successfully!");
+      setFormData(initialFormData);
+      setFormErrors({});
     } catch (error) {
       console.error("EmailJS error:", error);
-      alert("Failed to send message. Please try again.");
+      setSubmitState("error");
+      setSubmitMessage(
+        "Sending failed. Please try again in a moment or email me directly."
+      );
     }
   };
+
+  const getFieldClassName = (field?: keyof ContactFormErrors) =>
+    `w-full rounded-xl border px-4 py-3 text-white transition-all duration-300 placeholder:text-gray-500 shadow-inner focus:outline-none ${
+      field && formErrors[field]
+        ? "border-red-400/80 bg-red-500/5 focus:border-red-300 focus:shadow-[0_0_16px_rgba(248,113,113,0.18)]"
+        : "border-white/10 bg-[#0A0A0C] focus:border-purple-500 focus:shadow-[0_0_18px_rgba(147,51,234,0.22)]"
+    } disabled:cursor-not-allowed disabled:opacity-70`;
 
   const cursorX = useSpring(mousePosition.x, { stiffness: 400, damping: 25 });
   const cursorY = useSpring(mousePosition.y, { stiffness: 400, damping: 25 });
@@ -598,44 +722,225 @@ export default function Portfolio() {
                   </div>
                 </div>
                 
-                <form className="space-y-4" onSubmit={sendEmail}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input 
+                <form
+                  ref={formRef}
+                  className="space-y-5"
+                  onSubmit={sendEmail}
+                  noValidate
+                >
+                  <div
+                    className="absolute left-[-5000px] top-auto h-0 w-0 overflow-hidden"
+                    aria-hidden="true"
+                  >
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
                       type="text"
-                      name="name"
-                      placeholder="Name"
-                      required
-                      className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full placeholder:text-gray-600 shadow-inner"
-                    />
-                    <input 
-                      type="email"
-                      name="email"
-                      placeholder="Email"
-                      required
-                      className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full placeholder:text-gray-600 shadow-inner"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={formData.website}
+                      onChange={handleInputChange}
                     />
                   </div>
-                  <input 
-                    type="text"
-                    name="subject"
-                    placeholder="Subject"
-                    className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full placeholder:text-gray-600 shadow-inner"
-                  />
-                  <textarea 
-                    name="message"
-                    placeholder="Message"
-                    required
-                    rows={4}
-                    className="bg-[#0A0A0C] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(147,51,234,0.2)] transition-all w-full resize-none placeholder:text-gray-600 shadow-inner"
-                  />
-                  <button 
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="name"
+                        className="text-sm font-medium text-gray-300"
+                      >
+                        Name
+                      </label>
+                      <input
+                        id="name"
+                        type="text"
+                        name="name"
+                        placeholder="Your name"
+                        autoComplete="name"
+                        required
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        disabled={submitState === "sending"}
+                        aria-invalid={Boolean(formErrors.name)}
+                        aria-describedby={formErrors.name ? "name-error" : undefined}
+                        className={getFieldClassName("name")}
+                      />
+                      <AnimatePresence>
+                        {formErrors.name && (
+                          <motion.p
+                            id="name-error"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="text-sm text-red-300"
+                          >
+                            {formErrors.name}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="email"
+                        className="text-sm font-medium text-gray-300"
+                      >
+                        Email
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        required
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        disabled={submitState === "sending"}
+                        aria-invalid={Boolean(formErrors.email)}
+                        aria-describedby={formErrors.email ? "email-error" : undefined}
+                        className={getFieldClassName("email")}
+                      />
+                      <AnimatePresence>
+                        {formErrors.email && (
+                          <motion.p
+                            id="email-error"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="text-sm text-red-300"
+                          >
+                            {formErrors.email}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="subject"
+                      className="text-sm font-medium text-gray-300"
+                    >
+                      Subject
+                    </label>
+                    <input
+                      id="subject"
+                      type="text"
+                      name="subject"
+                      placeholder="Project inquiry"
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      disabled={submitState === "sending"}
+                      className={getFieldClassName()}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="message"
+                      className="text-sm font-medium text-gray-300"
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      placeholder="Tell me a little about your project..."
+                      rows={5}
+                      required
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      disabled={submitState === "sending"}
+                      aria-invalid={Boolean(formErrors.message)}
+                      aria-describedby={formErrors.message ? "message-error" : undefined}
+                      className={`${getFieldClassName("message")} min-h-[140px] resize-none`}
+                    />
+                    <AnimatePresence>
+                      {formErrors.message && (
+                        <motion.p
+                          id="message-error"
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          className="text-sm text-red-300"
+                        >
+                          {formErrors.message}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span className="h-2 w-2 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.85)]" />
+                    Protected by a lightweight spam filter.
+                  </div>
+
+                  <AnimatePresence mode="wait">
+                    {submitState === "success" ? (
+                      <motion.div
+                        key="success"
+                        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.98, y: -6 }}
+                        className="flex items-start gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-4 text-emerald-50 shadow-[0_0_24px_rgba(16,185,129,0.12)]"
+                      >
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300">
+                          <CheckCircle2 size={20} />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{submitMessage}</p>
+                          <p className="text-sm text-emerald-100/80">
+                            Thanks for reaching out — I&apos;ll get back to you soon.
+                          </p>
+                        </div>
+                      </motion.div>
+                    ) : submitState === "error" && submitMessage ? (
+                      <motion.div
+                        key="error"
+                        initial={{ opacity: 0, scale: 0.98, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.98, y: -6 }}
+                        className="flex items-start gap-3 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-red-50 shadow-[0_0_20px_rgba(248,113,113,0.08)]"
+                      >
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-400/15 text-red-300">
+                          <AlertCircle size={20} />
+                        </div>
+                        <div>
+                          <p className="font-semibold">Couldn&apos;t send your message</p>
+                          <p className="text-sm text-red-100/80">{submitMessage}</p>
+                        </div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+
+                  <motion.button
                     type="submit"
-                    className="w-full bg-white text-black font-medium py-4 rounded-xl hover:bg-purple-100 hover:shadow-[0_0_20px_rgba(147,51,234,0.3)] transition-all hover-target group relative overflow-hidden"
+                    disabled={submitState === "sending"}
+                    whileHover={submitState === "sending" ? undefined : { y: -1, scale: 1.01 }}
+                    whileTap={submitState === "sending" ? undefined : { scale: 0.99 }}
+                    className="group relative w-full overflow-hidden rounded-xl border border-purple-400/40 bg-gradient-to-r from-purple-600 via-purple-500 to-fuchsia-500 px-4 py-4 font-semibold text-white shadow-[0_0_24px_rgba(147,51,234,0.35)] transition-all duration-300 hover:shadow-[0_0_36px_rgba(168,85,247,0.45)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
+                    <span className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.28),transparent_55%)] opacity-90" />
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                     <span className="relative z-10 flex items-center justify-center gap-2">
-                      Send Message <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      {submitState === "sending" ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          Send Message
+                          <ArrowRight
+                            size={18}
+                            className="transition-transform duration-300 group-hover:translate-x-1"
+                          />
+                        </>
+                      )}
                     </span>
-                  </button>
+                  </motion.button>
                 </form>
               </div>
             </motion.div>
