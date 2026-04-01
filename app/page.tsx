@@ -1173,7 +1173,7 @@ export default function Portfolio() {
               rel="noopener noreferrer"
               className="hover:text-purple-400 hover:drop-shadow-[0_0_12px_rgba(147,51,234,0.8)] transition-all duration-300 hover:scale-110 cursor-pointer hover-target font-medium"
             >
-              X
+              Twitter (X)
             </a>
             <a
               href="https://www.instagram.com/bladesamuraii/?hl=en"
