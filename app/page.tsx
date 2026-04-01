@@ -42,31 +42,35 @@ const initialFormData: ContactFormData = {
 const PROJECTS = [
   {
     id: 1,
-    title: "Aura // Web3 Platform",
-    category: "Web Design",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop",
-    description: "Immersive landing page for a decentralized finance protocol.",
+    title: "NESTRIO Biggest Project",
+    category: "Flagship",
+    link: "https://project-rho-two-23.vercel.app/",
+    image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2000&auto=format&fit=crop",
+    description: "A premium interactive portfolio with cinematic animations and modern UX.",
   },
   {
     id: 2,
-    title: "Eclipse // E-Commerce",
-    category: "UI/UX & Frontend",
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop",
-    description: "Premium dark-mode shopping experience for high-end fashion.",
+    title: "3D Product Experience",
+    category: "3D / Motion",
+    link: "https://project-rho-two-23.vercel.app/",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2000&auto=format&fit=crop",
+    description: "Immersive product showcase with depth, micro-interactions, and motion-rich design.",
   },
   {
     id: 3,
-    title: "Nova // AI Dashboard",
-    category: "Product Design",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop",
-    description: "Complex data visualization interface for predictive AI models.",
+    title: "Interactive Landing Page",
+    category: "Conversion",
+    link: "https://project-rho-two-23.vercel.app/",
+    image: "https://images.unsplash.com/photo-1509395176047-4a66953fd231?q=80&w=2000&auto=format&fit=crop",
+    description: "Award-caliber landing page with parallax, scroll-triggered momentum, and visual polish.",
   },
   {
     id: 4,
-    title: "Solstice // Creative Agency",
-    category: "Interactive Design",
-    image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=2000&auto=format&fit=crop",
-    description: "Award-winning portfolio featuring WebGL and smooth scrolling.",
+    title: "UI/UX Case Study",
+    category: "Strategy",
+    link: "https://project-rho-two-23.vercel.app/",
+    image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=2000&auto=format&fit=crop",
+    description: "Data-driven product design case study focused on user journey and conversion lift.",
   },
 ];
 
@@ -102,6 +106,13 @@ export default function Portfolio() {
   // 3D Card Interactive States
   const [cardRotateX, setCardRotateX] = useState(0);
   const [cardRotateY, setCardRotateY] = useState(0);
+  const [projectTilt, setProjectTilt] = useState<{ id: number | null; rotateX: number; rotateY: number }>({
+    id: null,
+    rotateX: 0,
+    rotateY: 0,
+  });
+  const [loaded, setLoaded] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
   const [formErrors, setFormErrors] = useState<ContactFormErrors>({});
   const [submitState, setSubmitState] = useState<
@@ -171,6 +182,20 @@ export default function Portfolio() {
       window.removeEventListener("mousemove", updateMousePosition);
       window.removeEventListener("mouseover", handleMouseOver);
     };
+  }, []);
+
+  useEffect(() => {
+    let currentProgress = 0;
+    const loader = setInterval(() => {
+      currentProgress = Math.min(100, currentProgress + Math.random() * 12 + 6);
+      setLoadProgress(Math.round(currentProgress));
+      if (currentProgress >= 100) {
+        clearInterval(loader);
+        setTimeout(() => setLoaded(true), 500);
+      }
+    }, 120);
+
+    return () => clearInterval(loader);
   }, []);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -317,6 +342,35 @@ export default function Portfolio() {
 
   return (
     <div className="bg-[#0A0A0C] min-h-screen text-white font-sans selection:bg-purple-600/30 selection:text-purple-200 overflow-hidden relative">
+      <AnimatePresence>
+        {!loaded && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="fixed inset-0 z-[200] bg-[#07070a] flex flex-col items-center justify-center gap-8 text-center px-8"
+          >
+            <motion.h1
+              initial={{ opacity: 0, scale: 0.85, filter: "blur(10px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="text-6xl md:text-8xl font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#7c3aed] to-[#d8b4fe] drop-shadow-[0_0_30px_rgba(124,58,237,0.65)]"
+            >
+              NESTRIO
+            </motion.h1>
+            <div className="w-[80vw] max-w-[420px] bg-white/10 border border-purple-500/30 rounded-full overflow-hidden">
+              <div
+                className="h-3 bg-gradient-to-r from-purple-700 via-purple-500 to-fuchsia-500 transition-all duration-300"
+                style={{ width: `${loadProgress}%` }}
+              />
+            </div>
+            <p className="text-sm text-purple-200">Loading {loadProgress}%</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Advanced Premium Cursor */}
       <motion.div
         className="fixed top-0 left-0 w-6 h-6 rounded-full pointer-events-none z-[100] mix-blend-screen hidden md:flex items-center justify-center"
@@ -365,7 +419,12 @@ export default function Portfolio() {
         />
       </div>
 
-      <div className="relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10"
+      >
         {/* Premium Glassmorphic Navbar */}
         <motion.nav 
           initial={{ y: -50, opacity: 0 }}
@@ -437,15 +496,16 @@ export default function Portfolio() {
               >
                 <motion.span
                   animate={{
-                    y: [-5, 5, -5],
+                    y: [-8, 8, -8],
+                    scale: [1, 1.02, 1],
                     textShadow: [
-                      "0px 0px 20px rgba(147,51,234,0.3)",
-                      "0px 0px 50px rgba(147,51,234,0.7)",
-                      "0px 0px 20px rgba(147,51,234,0.3)",
+                      "0px 0px 20px rgba(124,58,237,0.25)",
+                      "0px 0px 80px rgba(147,51,234,0.8)",
+                      "0px 0px 22px rgba(124,58,237,0.35)",
                     ],
                   }}
-                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                  className="text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-purple-500 relative z-10 inline-block py-2"
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-transparent bg-clip-text bg-gradient-to-br from-purple-400 via-purple-300 to-fuchsia-400 relative z-10 inline-block py-2"
                 >
                   NESTRIO
                 </motion.span>
@@ -606,12 +666,33 @@ export default function Portfolio() {
 
             <div className="grid md:grid-cols-2 gap-8 md:gap-16">
               {PROJECTS.map((project, index) => (
-                <motion.div
+                <motion.a
                   key={project.id}
+                  href={project.link}
+                  target="_blank"
+                  rel="noreferrer"
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.8, delay: index * 0.1, ease: "easeOut" }}
+                  animate={
+                    projectTilt.id === project.id
+                      ? { rotateX: projectTilt.rotateX, rotateY: projectTilt.rotateY, scale: 1.03 }
+                      : { rotateX: 0, rotateY: 0, scale: 1 }
+                  }
+                  onMouseMove={(e) => {
+                    const card = e.currentTarget;
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width;
+                    const y = (e.clientY - rect.top) / rect.height;
+
+                    setProjectTilt({
+                      id: project.id,
+                      rotateX: (y - 0.5) * -15,
+                      rotateY: (x - 0.5) * 15,
+                    });
+                  }}
+                  onMouseLeave={() => setProjectTilt({ id: null, rotateX: 0, rotateY: 0 })}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className={`group cursor-pointer hover-target ${index % 2 === 1 ? 'md:mt-32' : ''}`}
                 >
                   <div className="overflow-hidden rounded-2xl md:rounded-[2rem] aspect-[4/3] relative mb-6 border border-white/5 shadow-2xl">
@@ -644,7 +725,7 @@ export default function Portfolio() {
                     </div>
                     <p className="text-gray-400 font-light">{project.description}</p>
                   </div>
-                </motion.div>
+                </motion.a>
               ))}
             </div>
           </div>
@@ -668,7 +749,7 @@ export default function Portfolio() {
                     {[...Array(5)].map((_, j) => <Star key={j} size={16} fill="currentColor" />)}
                   </div>
                   <p className="text-lg md:text-xl text-gray-300 mb-8 font-light leading-relaxed">
-                    "{review.text}"
+                    &quot;{review.text}&quot;
                   </p>
                   <div>
                     <div className="font-bold text-white">{review.name}</div>
@@ -690,10 +771,10 @@ export default function Portfolio() {
               className="mb-16"
             >
               <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-600 drop-shadow-2xl">
-                Let's create <br/> something iconic.
+                Let&apos;s create <br/> something iconic.
               </h2>
               <p className="text-xl text-gray-400 font-light">
-                Ready to elevate your digital presence? Drop a line and let's discuss your project.
+                Ready to elevate your digital presence? Drop a line and let&apos;s discuss your project.
               </p>
             </motion.div>
 
@@ -956,7 +1037,7 @@ export default function Portfolio() {
             <span className="hover:text-purple-400 hover:drop-shadow-[0_0_8px_rgba(147,51,234,0.5)] transition-all cursor-pointer hover-target">Dribbble</span>
           </div>
         </footer>
-      </div>
+      </motion.div>
     </div>
   );
 }
