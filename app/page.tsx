@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   AnimatePresence,
   motion,
@@ -42,36 +43,21 @@ const initialFormData: ContactFormData = {
 const PROJECTS = [
   {
     id: 1,
-    title: "NESTRIO Biggest Project",
-    category: "Flagship",
+    title: "Interactive Portfolio Experience",
+    category: "Featured",
     link: "https://project-rho-two-23.vercel.app/",
     image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2000&auto=format&fit=crop",
-    description: "A premium interactive portfolio with cinematic animations and modern UX.",
+    description:
+      "A modern, animated portfolio showcasing advanced UI, smooth interactions, and premium design.",
   },
-  {
-    id: 2,
-    title: "3D Product Experience",
-    category: "3D / Motion",
-    link: "https://project-rho-two-23.vercel.app/",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2000&auto=format&fit=crop",
-    description: "Immersive product showcase with depth, micro-interactions, and motion-rich design.",
-  },
-  {
-    id: 3,
-    title: "Interactive Landing Page",
-    category: "Conversion",
-    link: "https://project-rho-two-23.vercel.app/",
-    image: "https://images.unsplash.com/photo-1509395176047-4a66953fd231?q=80&w=2000&auto=format&fit=crop",
-    description: "Award-caliber landing page with parallax, scroll-triggered momentum, and visual polish.",
-  },
-  {
-    id: 4,
-    title: "UI/UX Case Study",
-    category: "Strategy",
-    link: "https://project-rho-two-23.vercel.app/",
-    image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=2000&auto=format&fit=crop",
-    description: "Data-driven product design case study focused on user journey and conversion lift.",
-  },
+];
+
+const SKILLS = [
+  { id: 1, title: "3D Interactive Websites" },
+  { id: 2, title: "Scroll-Based Animations" },
+  { id: 3, title: "Modern UI/UX Design" },
+  { id: 4, title: "High-End Landing Pages" },
+  { id: 5, title: "Creative Developer Experiences" },
 ];
 
 const REVIEWS = [
@@ -146,9 +132,7 @@ export default function Portfolio() {
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const sections = ["hero", "about", "work", "contact"];
-      
-      let current = "hero";
+      const sections = ["hero", "about", "work", "what", "contact"];
       sections.forEach((section) => {
         const el = document.getElementById(section);
         if (el && scrollY >= el.offsetTop - 300) {
@@ -356,9 +340,9 @@ export default function Portfolio() {
               initial={{ opacity: 0, scale: 0.85, filter: "blur(10px)" }}
               animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-6xl md:text-8xl font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#7c3aed] to-[#d8b4fe] drop-shadow-[0_0_30px_rgba(124,58,237,0.65)]"
+              className="text-6xl md:text-8xl font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#7c3aed] to-[#d8b4fe] drop-shadow-[0_0_45px_rgba(124,58,237,0.75)]"
             >
-              NESTRIO
+              Portfolio
             </motion.h1>
             <div className="w-[80vw] max-w-[420px] bg-white/10 border border-purple-500/30 rounded-full overflow-hidden">
               <div
@@ -440,7 +424,7 @@ export default function Portfolio() {
           </div>
           
           <div className="hidden md:flex gap-12 px-8 flex-1 justify-center relative">
-            {["about", "work", "contact"].map((section) => (
+            {["about", "work", "what", "contact"].map((section) => (
               <motion.a 
                 key={section}
                 href={`#${section}`} 
@@ -664,8 +648,8 @@ export default function Portfolio() {
               </div>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-8 md:gap-16">
-              {PROJECTS.map((project, index) => (
+            <div className="flex justify-center">
+              {PROJECTS.map((project) => (
                 <motion.a
                   key={project.id}
                   href={project.link}
@@ -693,7 +677,7 @@ export default function Portfolio() {
                   }}
                   onMouseLeave={() => setProjectTilt({ id: null, rotateX: 0, rotateY: 0 })}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className={`group cursor-pointer hover-target ${index % 2 === 1 ? 'md:mt-32' : ''}`}
+                  className="group cursor-pointer hover-target max-w-5xl w-full"
                 >
                   <div className="overflow-hidden rounded-2xl md:rounded-[2rem] aspect-[4/3] relative mb-6 border border-white/5 shadow-2xl">
                     <div className="absolute inset-0 bg-purple-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 mix-blend-overlay" />
@@ -702,10 +686,12 @@ export default function Portfolio() {
                       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                       className="w-full h-full bg-[#121216] relative"
                     >
-                      <img 
-                        src={project.image} 
+                      <Image
+                        src={project.image}
                         alt={project.title}
-                        className="w-full h-full object-cover opacity-80"
+                        fill
+                        sizes="(max-width: 768px) 90vw, 60vw"
+                        className="object-cover opacity-80"
                       />
                     </motion.div>
                     
@@ -726,6 +712,41 @@ export default function Portfolio() {
                     <p className="text-gray-400 font-light">{project.description}</p>
                   </div>
                 </motion.a>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="what" className="py-24 px-6 md:px-20 border-t border-white/10 bg-[#0F0F13] relative z-10">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="mb-14 text-center"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight">What I Can Build</h2>
+              <p className="text-gray-400 mt-3">Premium experiences designed for engagement, performance, and clarity.</p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {SKILLS.map((skill, i) => (
+                <motion.div
+                  key={skill.id}
+                  initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: i * 0.08 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="bg-[#121216] border border-white/10 rounded-3xl p-6 shadow-lg shadow-purple-900/20 cursor-default hover:bg-white/5 hover:border-purple-400/30 transition-all duration-300"
+                >
+                  <div className="mb-4 w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.25)]">
+                    <span className="text-purple-300 uppercase tracking-widest text-xs">{i + 1}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">{skill.title}</h3>
+                  <p className="text-sm text-gray-400">High-end build quality with modern UX motion and responsive polish.</p>
+                </motion.div>
               ))}
             </div>
           </div>
