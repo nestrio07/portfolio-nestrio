@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import {
   AnimatePresence,
   motion,
@@ -43,12 +42,12 @@ const initialFormData: ContactFormData = {
 const PROJECTS = [
   {
     id: 1,
-    title: "Interactive Portfolio Experience",
+    title: "3D Glass Dashboard Experience",
     category: "Featured",
     link: "https://project-rho-two-23.vercel.app/",
     image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2000&auto=format&fit=crop",
     description:
-      "A modern, animated portfolio showcasing advanced UI, smooth interactions, and premium design.",
+      "A high-end interactive dashboard with glassmorphism UI, smooth animations, and immersive 3D effects.",
   },
 ];
 
@@ -63,21 +62,21 @@ const SKILLS = [
 const REVIEWS = [
   {
     id: 1,
-    name: "Elena Rostova",
-    role: "CEO at TechFlow",
-    text: "NESTRIO transformed our brand identity. The attention to detail and cinematic feel of our new site skyrocketed our conversion rates.",
+    name: "Arjun Sharma",
+    role: "Web Developer",
+    text: "The animations and smoothness are next level. As a developer, I appreciate how the UI flows perfectly with every interaction.",
   },
   {
     id: 2,
-    name: "Marcus Lin",
-    role: "Founder, Nova AI",
-    text: "Working with NESTRIO was effortless. They didn't just design an interface; they engineered an incredible user experience.",
+    name: "Priya Patel",
+    role: "UI/UX Designer",
+    text: "The visuals are incredibly polished. Every detail feels premium, and the design really captures that modern, creative vibe.",
   },
   {
     id: 3,
-    name: "Sarah Jenkins",
-    role: "Creative Director",
-    text: "The web design feels alive. It’s incredibly rare to find someone who deeply understands both aesthetics and cutting-edge frontend performance.",
+    name: "Rahul Kumar",
+    role: "Content Creator",
+    text: "Working with this portfolio was inspiring. The overall experience is creative and engaging, perfect for showcasing work.",
   },
 ];
 
@@ -92,11 +91,7 @@ export default function Portfolio() {
   // 3D Card Interactive States
   const [cardRotateX, setCardRotateX] = useState(0);
   const [cardRotateY, setCardRotateY] = useState(0);
-  const [projectTilt, setProjectTilt] = useState<{ id: number | null; rotateX: number; rotateY: number }>({
-    id: null,
-    rotateX: 0,
-    rotateY: 0,
-  });
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [loaded, setLoaded] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
@@ -105,6 +100,16 @@ export default function Portfolio() {
     "idle" | "sending" | "success" | "error"
   >("idle");
   const [submitMessage, setSubmitMessage] = useState("");
+
+  // 3D Interactive States
+  const [heroTilt, setHeroTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [projectTilt, setProjectTilt] = useState<{ id: number | null; rotateX: number; rotateY: number }>({
+    id: null,
+    rotateX: 0,
+    rotateY: 0,
+  });
+  const [skillTilts, setSkillTilts] = useState<{ [key: number]: { rotateX: number; rotateY: number } }>({});
+  const [reviewTilts, setReviewTilts] = useState<{ [key: number]: { rotateX: number; rotateY: number } }>({});
 
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -133,13 +138,14 @@ export default function Portfolio() {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const sections = ["hero", "about", "work", "what", "contact"];
+      let currentSection = "hero";
       sections.forEach((section) => {
         const el = document.getElementById(section);
         if (el && scrollY >= el.offsetTop - 300) {
-          current = section;
+          currentSection = section;
         }
       });
-      setActiveSection(current);
+      setActiveSection(currentSection);
     };
 
     const updateMousePosition = (e: MouseEvent) => {
@@ -325,7 +331,13 @@ export default function Portfolio() {
   const cursorY = useSpring(mousePosition.y, { stiffness: 400, damping: 25 });
 
   return (
-    <div className="bg-[#0A0A0C] min-h-screen text-white font-sans selection:bg-purple-600/30 selection:text-purple-200 overflow-hidden relative">
+    <div className="bg-[#0A0A0C] min-h-screen text-white font-sans selection:bg-purple-600/30 selection:text-purple-200 overflow-hidden relative"
+      onMouseMove={(e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 20;
+        const y = (e.clientY / window.innerHeight - 0.5) * 20;
+        setParallax({ x, y });
+      }}
+    >
       <AnimatePresence>
         {!loaded && (
           <motion.div
@@ -334,19 +346,23 @@ export default function Portfolio() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="fixed inset-0 z-[200] bg-[#07070a] flex flex-col items-center justify-center gap-8 text-center px-8"
+            className="fixed inset-0 z-200 bg-[#07070a] flex flex-col items-center justify-center gap-8 text-center px-8"
           >
             <motion.h1
               initial={{ opacity: 0, scale: 0.85, filter: "blur(10px)" }}
               animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-6xl md:text-8xl font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#7c3aed] to-[#d8b4fe] drop-shadow-[0_0_45px_rgba(124,58,237,0.75)]"
+              className="text-6xl md:text-8xl font-black tracking-[0.18em] text-transparent bg-clip-text bg-linear-to-r from-[#a855f7] via-[#7c3aed] to-[#d8b4fe] drop-shadow-[0_0_45px_rgba(124,58,237,0.75)]"
+              style={{
+                transform: "perspective(1000px) rotateX(-5deg) translateZ(50px)",
+                transformStyle: "preserve-3d",
+              }}
             >
               Portfolio
             </motion.h1>
-            <div className="w-[80vw] max-w-[420px] bg-white/10 border border-purple-500/30 rounded-full overflow-hidden">
+            <div className="w-[80vw] max-w-105 bg-white/10 border border-purple-500/30 rounded-full overflow-hidden">
               <div
-                className="h-3 bg-gradient-to-r from-purple-700 via-purple-500 to-fuchsia-500 transition-all duration-300"
+                className="h-3 bg-linear-to-r from-purple-700 via-purple-500 to-fuchsia-500 transition-all duration-300"
                 style={{ width: `${loadProgress}%` }}
               />
             </div>
@@ -357,7 +373,7 @@ export default function Portfolio() {
 
       {/* Advanced Premium Cursor */}
       <motion.div
-        className="fixed top-0 left-0 w-6 h-6 rounded-full pointer-events-none z-[100] mix-blend-screen hidden md:flex items-center justify-center"
+        className="fixed top-0 left-0 w-6 h-6 rounded-full pointer-events-none z-100 mix-blend-screen hidden md:flex items-center justify-center"
         style={{
           x: cursorX,
           y: cursorY,
@@ -380,7 +396,7 @@ export default function Portfolio() {
       </motion.div>
 
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-800 to-purple-400 origin-left z-50 pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-1 bg-linear-to-r from-purple-800 to-purple-400 origin-left z-50 pointer-events-none"
         style={{ scaleX }}
       />
 
@@ -414,7 +430,7 @@ export default function Portfolio() {
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] md:w-auto md:min-w-[600px] border border-white/10 bg-[#0A0A0C]/60 backdrop-blur-xl rounded-full px-8 py-4 flex justify-between items-center z-50 shadow-[0_10px_40px_rgba(0,0,0,0.5)]"
+          className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] md:w-auto md:min-w-150 border border-white/10 bg-[#0A0A0C]/60 backdrop-blur-xl rounded-full px-8 py-4 flex justify-between items-center z-50 shadow-[0_10px_40px_rgba(0,0,0,0.5)]"
         >
           <div 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -440,7 +456,7 @@ export default function Portfolio() {
                 {activeSection === section && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute -bottom-1 left-0 right-0 h-[2px] bg-purple-500 rounded-full shadow-[0_0_10px_rgba(147,51,234,0.6)]"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(147,51,234,0.6)]"
                     initial={false}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
@@ -456,7 +472,19 @@ export default function Portfolio() {
           </a>
         </motion.nav>
 
-        <section id="hero" className="min-h-screen flex items-center relative px-6 md:px-20 max-w-7xl mx-auto pt-32 md:pt-0">
+        <section id="hero" className="min-h-screen flex items-center relative px-6 md:px-20 max-w-7xl mx-auto pt-32 md:pt-0"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -10;
+            const rotateY = ((x - centerX) / centerX) * 10;
+            setHeroTilt({ rotateX, rotateY });
+          }}
+          onMouseLeave={() => setHeroTilt({ rotateX: 0, rotateY: 0 })}
+        >
           <div className="grid md:grid-cols-2 gap-12 lg:gap-24 w-full items-center">
             {/* Left Col: Text */}
             <motion.div
@@ -487,9 +515,12 @@ export default function Portfolio() {
                       "0px 0px 80px rgba(147,51,234,0.8)",
                       "0px 0px 22px rgba(124,58,237,0.35)",
                     ],
+                    rotateX: heroTilt.rotateX,
+                    rotateY: heroTilt.rotateY,
                   }}
                   transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                  className="text-transparent bg-clip-text bg-gradient-to-br from-purple-400 via-purple-300 to-fuchsia-400 relative z-10 inline-block py-2"
+                  className="text-transparent bg-clip-text bg-linear-to-br from-purple-400 via-purple-300 to-fuchsia-400 relative z-10 inline-block py-2"
+                  style={{ transformStyle: "preserve-3d" }}
                 >
                   NESTRIO
                 </motion.span>
@@ -519,7 +550,7 @@ export default function Portfolio() {
                   <span className="relative z-10 group-hover:translate-x-1 transition-transform duration-300">
                     <ArrowRight size={20} />
                   </span>
-                  <div className="absolute inset-0 bg-purple-400 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1] z-0" />
+                  <div className="absolute inset-0 bg-purple-400 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1] z-0" />
                 </a>
               </motion.div>
             </motion.div>
@@ -537,17 +568,17 @@ export default function Portfolio() {
                 onMouseLeave={handleCardMouseLeave}
                 animate={{ rotateX: cardRotateX, rotateY: cardRotateY }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="w-full aspect-[4/5] rounded-[2rem] border border-white/10 bg-[#121216] relative overflow-hidden group hover-target transform-gpu shadow-[0_20px_50px_rgba(0,0,0,0.5)] will-change-transform"
+                className="w-full aspect-4/5 rounded-4xl border border-white/10 bg-[#121216] relative overflow-hidden group hover-target transform-gpu shadow-[0_20px_50px_rgba(0,0,0,0.5)] will-change-transform"
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 mix-blend-screen" />
+                <div className="absolute inset-0 bg-linear-to-br from-purple-900/30 via-transparent to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 mix-blend-screen" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-purple-500/10 blur-[60px] rounded-full z-0 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-700" />
                 
                 <div 
-                  className="absolute inset-[2px] rounded-[calc(2rem-2px)] bg-[#0A0A0C] border border-white/5 z-20 flex flex-col justify-between p-8 overflow-hidden pointer-events-none"
+                  className="absolute inset-0.5 rounded-[calc(2rem-2px)] bg-[#0A0A0C] border border-white/5 z-20 flex flex-col justify-between p-8 overflow-hidden pointer-events-none"
                   style={{ transform: "translateZ(40px)" }}
                 >
-                  <div className="absolute -right-12 -top-12 w-48 h-48 bg-purple-600/20 rounded-full blur-[40px] mix-blend-screen" />
+                  <div className="absolute -right-12 -top-12 w-48 h-48 bg-purple-600/20 rounded-full blur-2xl mix-blend-screen" />
                   
                   <div className="relative z-10 flex justify-between items-start">
                     <Star className="text-purple-400 drop-shadow-[0_0_10px_rgba(147,51,234,0.5)] animate-pulse" />
@@ -570,7 +601,7 @@ export default function Portfolio() {
                   </div>
 
                   <div className="relative z-10">
-                    <h3 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400">Digital <br/> Experience</h3>
+                    <h3 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-linear-to-br from-white to-gray-400">Digital <br/> Experience</h3>
                     <p className="text-xs text-gray-500 font-light mt-2 uppercase tracking-wider">Move cursor to interact</p>
                   </div>
                 </div>
@@ -616,9 +647,9 @@ export default function Portfolio() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="relative aspect-square md:aspect-[4/5] rounded-[2rem] overflow-hidden group bg-[#121216] border border-white/10 flex items-center justify-center dashboard-mockup shadow-2xl"
+              className="relative aspect-square md:aspect-4/5 rounded-4xl overflow-hidden group bg-[#121216] border border-white/10 flex items-center justify-center dashboard-mockup shadow-2xl"
             >
-               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent z-0"/>
+               <div className="absolute inset-0 bg-linear-to-br from-purple-500/10 to-transparent z-0"/>
                <motion.div 
                  animate={{ rotateZ: 360, rotateY: 360, rotateX: 360 }}
                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -677,21 +708,24 @@ export default function Portfolio() {
                   }}
                   onMouseLeave={() => setProjectTilt({ id: null, rotateX: 0, rotateY: 0 })}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className="group cursor-pointer hover-target max-w-5xl w-full"
+                  className="group cursor-pointer hover-target max-w-3xl w-full mx-auto"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    perspective: "1000px",
+                  }}
                 >
-                  <div className="overflow-hidden rounded-2xl md:rounded-[2rem] aspect-[4/3] relative mb-6 border border-white/5 shadow-2xl">
+                  <div className="overflow-hidden rounded-2xl md:rounded-4xl aspect-4/3 relative mb-6 border border-white/5 shadow-2xl">
                     <div className="absolute inset-0 bg-purple-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 mix-blend-overlay" />
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                       className="w-full h-full bg-[#121216] relative"
+                      style={{ transform: "translateZ(20px)" }}
                     >
-                      <Image
+                      <img
                         src={project.image}
                         alt={project.title}
-                        fill
-                        sizes="(max-width: 768px) 90vw, 60vw"
-                        className="object-cover opacity-80"
+                        className="w-full h-full object-cover opacity-80"
                       />
                     </motion.div>
                     
@@ -714,6 +748,8 @@ export default function Portfolio() {
                 </motion.a>
               ))}
             </div>
+
+            <p className="mt-8 text-center text-gray-500 text-sm tracking-wide">More projects coming soon.</p>
           </div>
         </section>
 
@@ -735,17 +771,70 @@ export default function Portfolio() {
                 <motion.div
                   key={skill.id}
                   initial={{ opacity: 0, y: 24, scale: 0.98 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, delay: i * 0.08 } }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: i * 0.08 }}
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  className="bg-[#121216] border border-white/10 rounded-3xl p-6 shadow-lg shadow-purple-900/20 cursor-default hover:bg-white/5 hover:border-purple-400/30 transition-all duration-300"
+                  animate={{
+                    y: [0, -8, 0],
+                    rotateX: skillTilts[skill.id]?.rotateX || 0,
+                    rotateY: skillTilts[skill.id]?.rotateY || 0,
+                  }}
+                  whileHover={{
+                    scale: 1.05,
+                    translateZ: 60,
+                    boxShadow: "0 40px 80px rgba(0,0,0,0.8), 0 0 60px rgba(124,58,237,0.4), 0 0 100px rgba(124,58,237,0.2)",
+                    transition: { duration: 0.3 },
+                  }}
+                  transition={{
+                    y: { duration: 6, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 },
+                    rotateX: { type: "spring", stiffness: 400, damping: 25 },
+                    rotateY: { type: "spring", stiffness: 400, damping: 25 },
+                  }}
+                  onMouseMove={(e) => {
+                    const card = e.currentTarget;
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -20;
+                    const rotateY = ((x - centerX) / centerX) * 20;
+                    setSkillTilts((prev) => ({ ...prev, [skill.id]: { rotateX, rotateY } }));
+                  }}
+                  onMouseLeave={() => setSkillTilts((prev) => ({ ...prev, [skill.id]: { rotateX: 0, rotateY: 0 } }))}
+                  className="bg-[#121216]/90 backdrop-blur-sm border border-white/10 rounded-3xl p-6 shadow-lg shadow-purple-900/20 cursor-default hover:bg-white/5 hover:border-purple-400/40 transition-all duration-300 relative overflow-hidden group"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    perspective: "1200px",
+                  }}
                 >
-                  <div className="mb-4 w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.25)]">
+                  {/* Soft lighting effect */}
+                  <div
+                    className="absolute inset-0 bg-linear-to-br from-purple-500/5 via-transparent to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                    style={{ transform: "translateZ(-20px)" }}
+                  />
+                  {/* Gradient glow edges */}
+                  <div className="absolute inset-0 rounded-3xl bg-linear-to-r from-transparent via-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+                  {/* Glass reflection */}
+                  <div className="absolute top-0 left-0 right-0 h-1/2 bg-linear-to-b from-white/10 to-transparent rounded-t-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
+
+                  <div
+                    className="mb-4 w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.25)] group-hover:shadow-[0_0_30px_rgba(124,58,237,0.4)] transition-shadow duration-300"
+                    style={{ transform: "translateZ(60px)" }}
+                  >
                     <span className="text-purple-300 uppercase tracking-widest text-xs">{i + 1}</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">{skill.title}</h3>
-                  <p className="text-sm text-gray-400">High-end build quality with modern UX motion and responsive polish.</p>
+                  <h3
+                    className="text-xl font-semibold text-white mb-2"
+                    style={{ transform: "translateZ(40px)" }}
+                  >
+                    {skill.title}
+                  </h3>
+                  <p
+                    className="text-sm text-gray-400"
+                    style={{ transform: "translateZ(20px)" }}
+                  >
+                    High-end build quality with modern UX motion and responsive polish.
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -754,17 +843,43 @@ export default function Portfolio() {
 
         <section className="py-32 px-6 bg-[#121216] border-y border-white/5 relative z-10 overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]">
           <div className="max-w-7xl mx-auto relative">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-20 drop-shadow-md">Client Voices</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 drop-shadow-md">Client Voices</h2>
+            <p className="text-gray-400 text-center mb-20">What people say about my work</p>
             
             <div className="grid md:grid-cols-3 gap-8">
               {REVIEWS.map((review, i) => (
                 <motion.div
                   key={review.id}
                   initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  whileInView={{ opacity: 1, y: 0, transition: { duration: 0.8, delay: i * 0.2 } }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: i * 0.2 }}
-                  className="bg-[#0A0A0C] border border-white/5 p-8 rounded-3xl hover:bg-white/5 transition-colors hover-target shadow-xl"
+                  whileHover={{
+                    scale: 1.02,
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(124,58,237,0.2)",
+                    transition: { duration: 0.3 },
+                  }}
+                  animate={{
+                    rotateX: reviewTilts[review.id]?.rotateX || 0,
+                    rotateY: reviewTilts[review.id]?.rotateY || 0,
+                    transition: {
+                      rotateX: { type: "spring", stiffness: 300, damping: 20 },
+                      rotateY: { type: "spring", stiffness: 300, damping: 20 },
+                    },
+                  }}
+                  onMouseMove={(e) => {
+                    const card = e.currentTarget;
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -10;
+                    const rotateY = ((x - centerX) / centerX) * 10;
+                    setReviewTilts((prev) => ({ ...prev, [review.id]: { rotateX, rotateY } }));
+                  }}
+                  onMouseLeave={() => setReviewTilts((prev) => ({ ...prev, [review.id]: { rotateX: 0, rotateY: 0 } }))}
+                  className="bg-[#0A0A0C]/80 backdrop-blur-md border border-white/10 p-8 rounded-3xl hover:bg-white/5 transition-all duration-300 shadow-xl hover:shadow-2xl"
+                  style={{ transformStyle: "preserve-3d" }}
                 >
                   <div className="flex gap-1 mb-6 text-purple-400 drop-shadow-[0_0_5px_rgba(147,51,234,0.5)]">
                     {[...Array(5)].map((_, j) => <Star key={j} size={16} fill="currentColor" />)}
@@ -791,7 +906,7 @@ export default function Portfolio() {
               transition={{ duration: 0.8 }}
               className="mb-16"
             >
-              <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-600 drop-shadow-2xl">
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 text-transparent bg-clip-text bg-linear-to-br from-white to-gray-600 drop-shadow-2xl">
                 Let&apos;s create <br/> something iconic.
               </h2>
               <p className="text-xl text-gray-400 font-light">
@@ -831,7 +946,7 @@ export default function Portfolio() {
                   noValidate
                 >
                   <div
-                    className="absolute left-[-5000px] top-auto h-0 w-0 overflow-hidden"
+                    className="absolute -left-1250 top-auto h-0 w-0 overflow-hidden"
                     aria-hidden="true"
                   >
                     <label htmlFor="website">Website</label>
@@ -957,7 +1072,7 @@ export default function Portfolio() {
                       disabled={submitState === "sending"}
                       aria-invalid={Boolean(formErrors.message)}
                       aria-describedby={formErrors.message ? "message-error" : undefined}
-                      className={`${getFieldClassName("message")} min-h-[140px] resize-none`}
+                      className={`${getFieldClassName("message")} min-h-35 resize-none`}
                     />
                     <AnimatePresence>
                       {formErrors.message && (
@@ -1022,10 +1137,10 @@ export default function Portfolio() {
                     disabled={submitState === "sending"}
                     whileHover={submitState === "sending" ? undefined : { y: -1, scale: 1.01 }}
                     whileTap={submitState === "sending" ? undefined : { scale: 0.99 }}
-                    className="group relative w-full overflow-hidden rounded-xl border border-purple-400/40 bg-gradient-to-r from-purple-600 via-purple-500 to-fuchsia-500 px-4 py-4 font-semibold text-white shadow-[0_0_24px_rgba(147,51,234,0.35)] transition-all duration-300 hover:shadow-[0_0_36px_rgba(168,85,247,0.45)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="group relative w-full overflow-hidden rounded-xl border border-purple-400/40 bg-linear-to-r from-purple-600 via-purple-500 to-fuchsia-500 px-4 py-4 font-semibold text-white shadow-[0_0_24px_rgba(147,51,234,0.35)] transition-all duration-300 hover:shadow-[0_0_36px_rgba(168,85,247,0.45)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.28),transparent_55%)] opacity-90" />
-                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                    <span className="absolute inset-0 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       {submitState === "sending" ? (
                         <>
@@ -1052,10 +1167,22 @@ export default function Portfolio() {
         <footer className="py-8 px-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 relative z-10 w-full max-w-7xl mx-auto mt-20">
           <p>Designed by NESTRIO © 2026</p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <span className="hover:text-purple-400 hover:drop-shadow-[0_0_8px_rgba(147,51,234,0.5)] transition-all cursor-pointer hover-target">Twitter</span>
-            <span className="hover:text-purple-400 hover:drop-shadow-[0_0_8px_rgba(147,51,234,0.5)] transition-all cursor-pointer hover-target">LinkedIn</span>
-            <span className="hover:text-purple-400 hover:drop-shadow-[0_0_8px_rgba(147,51,234,0.5)] transition-all cursor-pointer hover-target">Instagram</span>
-            <span className="hover:text-purple-400 hover:drop-shadow-[0_0_8px_rgba(147,51,234,0.5)] transition-all cursor-pointer hover-target">Dribbble</span>
+            <a
+              href="https://x.com/dimetatu38541"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-purple-400 hover:drop-shadow-[0_0_12px_rgba(147,51,234,0.8)] transition-all duration-300 hover:scale-110 cursor-pointer hover-target font-medium"
+            >
+              X
+            </a>
+            <a
+              href="https://www.instagram.com/bladesamuraii/?hl=en"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-purple-400 hover:drop-shadow-[0_0_12px_rgba(147,51,234,0.8)] transition-all duration-300 hover:scale-110 cursor-pointer hover-target font-medium"
+            >
+              Instagram
+            </a>
           </div>
         </footer>
       </motion.div>
